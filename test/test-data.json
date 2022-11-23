@@ -1,0 +1,129 @@
+{
+  "INPUT_DATA": {
+    "login_name": "administrator",
+    "entity_data": {
+      "template": {
+        "name": "Terraform",
+        "id": 301
+      },
+      "completed_on": null,
+      "services_affected": [],
+      "roles": [
+        {
+          "name": "ChangeManager",
+          "id": 1,
+          "users": []
+        },
+        {
+          "name": "ChangeOwner",
+          "id": 2,
+          "users": []
+        },
+        {
+          "name": "ChangeRequester",
+          "id": 3,
+          "users": []
+        },
+        {
+          "name": "CAB",
+          "id": 4,
+          "users": []
+        },
+        {
+          "name": "ChangeApprover",
+          "id": 5,
+          "users": []
+        },
+        {
+          "name": "SharedRole",
+          "id": 6,
+          "users": []
+        },
+        {
+          "name": "Line Manager",
+          "id": 7,
+          "users": []
+        },
+        {
+          "name": "Implementer",
+          "id": 8,
+          "users": []
+        },
+        {
+          "name": "Reviewer",
+          "id": 9,
+          "users": []
+        }
+      ],
+      "description": "",
+      "type": null,
+      "title": "get output",
+      "ISOVERDUE": null,
+      "assets": [],
+      "urgency": null,
+      "SLAID": "",
+      "id": 63,
+      "scheduled_end_on": null,
+      "state": {
+        "comments": "",
+        "stage": {
+          "name": "Submission",
+          "id": 1
+        },
+        "status": {
+          "name": "Requested",
+          "id": 3
+        }
+      },
+      "group": null,
+      "scheduled_start_on": null,
+      "item": null,
+      "workflow": {
+        "name": "SDGeneral",
+        "id": 1
+      },
+      "custom_fields": [
+        {
+          "name": "UDF_CHAR1",
+          "label": "workspace_name",
+          "value": "test_workspace36"
+        },
+        {
+          "name": "UDF_CHAR3",
+          "label": "db_name",
+          "value": "nambeo_db_name"
+        },
+        {
+          "name": "UDF_CHAR5",
+          "label": "db_username",
+          "value": "nambeo_db_username"
+        },
+        {
+          "name": "UDF_CHAR6",
+          "label": "db_password",
+          "value": "nambeo_db_pwd"
+        }
+      ],
+      "impact": null,
+      "approval_levels": [
+        {
+          "level": 1,
+          "approvals": []
+        }
+      ],
+      "priority": null,
+      "reason_for_change": null,
+      "created_on": {
+        "display_value": "Nov 22, 2022 05:16 AM",
+        "value": 1669094198821
+      },
+      "risk": null,
+      "category": {
+        "name": "General",
+        "id": 1
+      },
+      "subcategory": null
+    },
+    "entity": "change"
+  }
+}
