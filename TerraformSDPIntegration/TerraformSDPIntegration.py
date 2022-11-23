@@ -4,6 +4,9 @@ import json
 import TerraformApi
 import SDP
 import VCS
+import tarfile
+import glob
+import stat
 
 
 # load $COMPLETE_JSON_FILE from SDP
@@ -28,12 +31,25 @@ if (REPO == '') or (REPO is None):
     raise SystemExit("No dotenv with name TF_ORG provided, exiting...")
 
 # Get Terraform code from repository
-repo_dir = VCS.git_clone(REPO, "../temp")
+repo = VCS.git_clone(REPO, "../temp")
+repo_dir = repo.git_dir.replace(".git", "")
+# files = glob.glob(repo.git_dir)
+# for f in files:
+#     os.chmod(f, stat.S_IWRITE)
+#     os.remove(f)
+
+repo_name = repo.remotes.origin.url.split('.git')[0].split('/')[-1]
+tar_file = f"../temp/{repo_name}.tar.gz"
+with tarfile.open(tar_file, "w:gz") as tar:
+    tar.add(repo_dir, arcname=os.path.basename(repo_dir))
+
 var_files = VCS.find_all("variables.tf", "../temp")
 # get variable list
 var_list = []
 for file in var_files:
-    var_list.append(VCS.get_tf_var(file))
+    var_in_file = VCS.get_tf_var(file)
+    for s in var_in_file:
+        var_list.append(s)
 
 # get unique value from var_list[] by convert to set
 var_list = set(var_list)
@@ -44,9 +60,12 @@ var_list = list(var_list)
 field_list = SDP.get_field(opt_data)
 field_name_list = list(field_list.keys())
 matching_field_name = [field for field in field_name_list if field in var_list]
-matching_field = {{field: val} for field, val in field_list if field in matching_field_name}
+matching_field = {}
+for field in field_list:
+    if field in matching_field_name:
+        matching_field.update({field: field_list[field]})
 
-# Check if workspace field has value
+# Check if workspace field hs value
 ws_name = matching_field["workspace_name"]
 if (ws_name == '') or (ws_name is None):
     SystemExit("No Terraform workspace name provided, exiting...")

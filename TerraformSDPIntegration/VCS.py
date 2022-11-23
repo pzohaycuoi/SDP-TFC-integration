@@ -11,11 +11,11 @@ def git_clone(repo_url, folder_path):
     :return: repository directory path
     """
     try:
-        repo = git.Repo.clone(repo_url, folder_path)
+        repo = git.Repo.clone_from(repo_url, to_path=folder_path)
     except AssertionError as err:
         raise SystemExit(err)
 
-    return repo.git_dir
+    return repo
 
 
 def find_all(name, path):
@@ -43,11 +43,8 @@ def get_tf_var(filepath: str):
     pattern = "variable"
     matching_lines = [line for line in open(filepath).readlines() if pattern in line]
     var_list = []
-    replace_list = [" ", '"', "{", "variable"]
     for line in matching_lines:
-        for char in replace_list:
-            line = line.replace(char, '')
-
+        line = line.split()[1].replace('"', '')
         var_list.append(line)
 
     return var_list
