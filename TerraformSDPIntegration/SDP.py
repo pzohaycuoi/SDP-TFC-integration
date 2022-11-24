@@ -53,3 +53,21 @@ def get_field(json_data: dict):
 
     return field_and_value
 
+
+def get_env(env_name: str, config_json="../config/config.json"):
+    """
+
+    :param env_name:
+    :param config_json:
+    :return:
+    """
+    with open(config_json) as data_file:
+        data = data_file.read()
+        data_json = json.loads(data)
+
+    varset_name = ""
+    for field in data_json["variable_set"]:
+        if env_name in field:
+            varset_name = field["field"]
+
+    return varset_name
