@@ -86,7 +86,7 @@
         {
           "name": "UDF_CHAR1",
           "label": "workspace_name",
-          "value": "test_workspace36"
+          "value": "test_workspace42"
         },
         {
           "name": "UDF_CHAR3",
@@ -102,6 +102,11 @@
           "name": "UDF_CHAR6",
           "label": "db_password",
           "value": "nambeo_db_pwd"
+        },
+        {
+          "name": "UDF_CHAR7",
+          "label": "Envionment",
+          "value": "dev"
         }
       ],
       "impact": null,
