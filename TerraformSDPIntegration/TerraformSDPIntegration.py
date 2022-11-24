@@ -56,7 +56,6 @@ var_list = set(var_list)
 var_list = list(var_list)
 
 # Get SDP custom field values, base on Terraform variable file
-# var_list = ["workspace_name", "db_name", "db_username", "db_password"]
 field_list = SDP.get_field(opt_data)
 field_name_list = list(field_list.keys())
 matching_field_name = [field for field in field_name_list if field in var_list]
@@ -64,24 +63,29 @@ matching_field = {}
 for field in field_list:
     if field in matching_field_name:
         matching_field.update({field: field_list[field]})
+    elif field == "workspace_name":
+        matching_field.update({field: field_list[field]})
 
 # Check if workspace field hs value
 ws_name = matching_field["workspace_name"]
 if (ws_name == '') or (ws_name is None):
     SystemExit("No Terraform workspace name provided, exiting...")
 
+# TODO: Check if workspace is created
 # Create Terraform workspace
-ws_create = TerraformApi.creation(TOKEN, TF_ORG, workspace_name=ws_name, auto_apply=False)
+ws_create = TerraformApi.creation(TOKEN, TF_ORG, ws_name, auto_apply=False)
 ws_create.raise_for_status()
 ws_create_content = json.loads(ws_create.content)
 
+
+# TODO: If workspace is already created, check if workspace have configuration version
 # Create Terraform configuration version
-ws_conf_create = TerraformApi.config(TOKEN, workspace_id=ws_create_content["data"]["id"], auto_queue=False)
+ws_conf_create = TerraformApi.config(TOKEN, ws_create_content["data"]["id"], auto_queue=False)
 ws_conf_create.raise_for_status()
 ws_conf_content = json.loads(ws_conf_create)
 
 # Get upload url from configuration version and upload Terraform code into workspace
-ws_conf_upload = TerraformApi.upload_code(TOKEN, "cac", ws_conf_content["data"]["attributes"]["upload-url"])
+ws_conf_upload = TerraformApi.upload_code(TOKEN, tar_file, ws_conf_content["data"]["attributes"]["upload-url"])
 
 # # get upload url from the configuration version
 # ws_conf_upload_url = ws_conf_content["data"]["attributes"]["upload-url"]
