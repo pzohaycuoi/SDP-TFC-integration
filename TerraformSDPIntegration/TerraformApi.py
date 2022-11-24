@@ -1,5 +1,6 @@
 import requests
 from os.path import exists
+import json
 
 
 def workspace_create(token: str, terraform_org: str, workspace_name: str, auto_apply=False):
@@ -68,6 +69,25 @@ def workspace_config_create(token: str, workspace_id: str, auto_queue=False):
     return req
 
 
+def workspace_config_get(token: str, config_id: str):
+    """
+    Get Terraform workspace configuration version information through API request
+    Construct API request and send API request for getting the workspace configuration version information
+    https://developer.hashicorp.com/terraform/cloud-docs/api-docs/configuration-versions#show-a-configuration-version
+    :param token: Terraform user token
+    :param config_id: Terraform configuration id
+    :return: API response
+    """
+    header = {"Content-type": "application/vnd.api+json", "Authorization": f"Bearer {token}"}
+    url = f"https://app.terraform.io/api/v2/configuration-versions/{config_id}/"
+    try:
+        req = requests.get(url, headers=header, verify=True)
+    except requests.exceptions.RequestException as err:
+        raise SystemExit(err)
+
+    return req
+
+
 def workspace_upload_code(token: str, filepath: str, upload_url: str):
     """
     Upload Terraform code in .tar.gz type, to Terraform configuration version
@@ -88,25 +108,96 @@ def workspace_upload_code(token: str, filepath: str, upload_url: str):
         file = [('file', open(filepath, "rb"))]
 
     try:
-        req = requests.put(url, headers=header, files=file,verify=True)
+        req = requests.put(url, headers=header, files=file, verify=True)
     except requests.exceptions.RequestException as err:
         raise SystemExit(err)
 
     return req
 
 
-def payload_tf_run(var_name: str, val: str, description, hcl: bool, sensitive: bool):
+def workspace_var_create(token: str, var_name: str, var_val: str, hcl=True, sensitive=False, description=None):
     """
     TODO: refactor this
     construct terraform run payload, can only create 1 variable at once
     https://developer.hashicorp.com/terraform/cloud-docs/api-docs/workspace-variables
+    :param token: Terraform user token
     :param var_name: string, variable name
-    :param val: string, variable value
+    :param var_val: string, variable value
     :param description: string, description of the variable
     :param hcl: bool, parse this variable as HCL, allow to interpolate at run time
     :param sensitive: bool, sensitive variable are never shown in UI or API
     :return: dict, JSON payload
     """
-    payload = {"data": {"type": "vars", "attributes": {"key": var_name, "value": val, "description": description,
-                                                       "category": "terraform", "hcl": hcl, "sensitive": sensitive}}}
-    return payload
+    if description is not None:
+        payload = {"data": {"type": "vars", "attributes": {"key": var_name, "value": var_val, "description": description,
+                                                           "category": "terraform", "hcl": hcl,
+                                                           "sensitive": sensitive}}}
+    else:
+        payload = {"data": {"type": "vars", "attributes": {"key": var_name, "value": var_val, "category": "terraform",
+                                                           "hcl": hcl, "sensitive": sensitive}}}
+
+    header = {"Content-type": "application/vnd.api+json", "Authorization": f"Bearer {token}"}
+    url = ""
+    try:
+        req = requests.post(url, json=payload, headers=header, verify=True)
+    except requests.exceptions.RequestException as err:
+        raise SystemExit(err)
+
+    return req
+
+
+def workspace_varset_set(token: str, varset_id: str, workspace_id: str):
+    """
+    TODO: refactor this
+    Attach Terraform variable set to a workspace
+    Construct API request and send API request for attaching variable set to Terraform workspace
+    https://developer.hashicorp.com/terraform/cloud-docs/api-docs/variable-sets#apply-variable-set-to-workspaces
+    :param token: Terraform user token
+    :param varset_id: string, variable name
+    :param workspace_id: string, variable value
+    :return: dict, JSON payload
+    """
+    payload = {"data": {"type": "workspaces", "id": f"{workspace_id}"}}
+    header = {"Content-type": "application/vnd.api+json", "Authorization": f"Bearer {token}"}
+    url = f"https://app.terraform.io/api/v2/varsets/{varset_id}/relationships/workspaces/"
+    try:
+        req = requests.post(url, json=payload, headers=header, verify=True)
+    except requests.exceptions.RequestException as err:
+        raise SystemExit(err)
+
+    return req
+
+
+def tf_varset_get(token: str, varset_name: str, terraform_org: str):
+    """
+    Get Terraform variable set ID from variable set name
+    Construct API request and send API request for getting the variable set id from provided variable set name
+    in Terraform organization
+    https://developer.hashicorp.com/terraform/cloud-docs/api-docs/variable-sets#show-variable-set
+    https://developer.hashicorp.com/terraform/cloud-docs/api-docs/variable-sets#list-variable-set
+    :param token: Terraform user token
+    :param varset_name: Terraform organization variable set name
+    :param terraform_org: Terraform organization name
+    :return: Terraform variable set id
+    """
+    header = {"Content-type": "application/vnd.api+json", "Authorization": f"Bearer {token}"}
+    varset_id = ""
+    i = 0
+    while True:
+        i += 1
+        url = f"https://app.terraform.io/api/v2/organizations/{terraform_org}/varsets/?page%5Bnumber%5D={i}&page%5Bsize%5D=100"
+        try:
+            req = requests.get(url, headers=header, verify=True)
+        except requests.exceptions.RequestException as err:
+            raise SystemExit(err)
+
+        res = json.loads(req.text)
+        if varset_id == "":
+            for data in res['data']:
+                if data["attributes"]["name"] == varset_name:
+                    varset_id = data["id"]
+                    break
+        else:
+            break
+
+    return varset_id
