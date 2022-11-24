@@ -37,9 +37,9 @@ def workspace_get(token: str, terraform_org: str, workspace_name: str):
     :return: API response
     """
     header = {"Content-type": "application/vnd.api+json", "Authorization": f"Bearer {token}"}
-    url = f"https://app.terraform.io/api/v2/organizations/{terraform_org}/workspaces/{workspace_name}"
+    url = f"https://app.terraform.io/api/v2/organizations/{terraform_org}/workspaces/{workspace_name}/"
     try:
-        req = requests.post(url, headers=header, verify=True)
+        req = requests.get(url, headers=header, verify=True)
     except requests.exceptions.RequestException as err:
         raise SystemExit(err)
 
@@ -84,8 +84,9 @@ def workspace_upload_code(token: str, filepath: str, upload_url: str):
     url = upload_url
     if not exists(filepath):
         raise SystemExit('File path to Terraform .tar.gz file not exist')
+    else:
+        file = [('file', open(filepath, "rb"))]
 
-    file = [('file', open(filepath, "rb"))]
     try:
         req = requests.put(url, headers=header, files=file,verify=True)
     except requests.exceptions.RequestException as err:
