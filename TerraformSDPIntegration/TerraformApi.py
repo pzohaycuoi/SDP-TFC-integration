@@ -115,7 +115,8 @@ def workspace_upload_code(token: str, filepath: str, upload_url: str):
     return req
 
 
-def workspace_var_create(token: str, var_name: str, var_val: str, hcl=True, sensitive=False, description=None):
+def workspace_var_create(token: str, var_name: str, var_val: str, workspace_id: str, hcl=True, sensitive=False,
+                         description=None):
     """
     TODO: refactor this
     construct terraform run payload, can only create 1 variable at once
@@ -137,7 +138,7 @@ def workspace_var_create(token: str, var_name: str, var_val: str, hcl=True, sens
                                                            "hcl": hcl, "sensitive": sensitive}}}
 
     header = {"Content-type": "application/vnd.api+json", "Authorization": f"Bearer {token}"}
-    url = ""
+    url = f"https://app.terraform.io/api/v2/workspaces/{workspace_id}/vars"
     try:
         req = requests.post(url, json=payload, headers=header, verify=True)
     except requests.exceptions.RequestException as err:
@@ -157,7 +158,7 @@ def workspace_varset_set(token: str, varset_id: str, workspace_id: str):
     :param workspace_id: string, variable value
     :return: dict, JSON payload
     """
-    payload = {"data": {"type": "workspaces", "id": f"{workspace_id}"}}
+    payload = {"data": [{"type": "workspaces", "id": f"{workspace_id}"}]}
     header = {"Content-type": "application/vnd.api+json", "Authorization": f"Bearer {token}"}
     url = f"https://app.terraform.io/api/v2/varsets/{varset_id}/relationships/workspaces/"
     try:

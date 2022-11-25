@@ -98,15 +98,29 @@ else:
 # SETTING UP WORKSPACE VARIABLES AND VARIABLE SETS #
 # Set variables of workspace (TFvars)
 for field in matching_field:
-    if (field != "Environment") or (field != "workspace_name"):
-        for k, v in field:
-            ws_var_create = TerraformApi.workspace_var_create(TOKEN, k, v)
-            ws_var_create.raise_for_status()
+    if (field != "Environment") and (field != "workspace_name"):
+        ws_var_create = TerraformApi.workspace_var_create(TOKEN, field, matching_field[field],
+                                                          ws_create_content["data"]["id"])
+        ws_var_create.raise_for_status()
+    else:
+        continue
+
+
+# Get variable set name from config file
+try:
+    config_data = SDP.convert_json("../config/config.json")
+except AssertionError as err:
+    raise SystemExit(err)
+
+if matching_field["Environment"] in config_data["variable-set"]:
+    varset_name = config_data["variable-set"][matching_field["Environment"]]
+else:
+    SystemExit("SDP ticket: provided Environment field doesn't match any variable set in config.json")
 
 # Get variable set ID
-    varset_id = TerraformApi.tf_varset_get(TOKEN, field["Environment"], TF_ORG)
-    if varset_id == "":
-        SystemExit("SDP ticket: provided Environment field doesn't match any variable set")
-    else:
-        ws_varset = TerraformApi.workspace_varset_set(TOKEN, varset_id, workspace_id=ws_create_content["data"]["id"])
-        ws_varset.raise_for_status()
+varset_id = TerraformApi.tf_varset_get(TOKEN, varset_name, TF_ORG)
+if varset_id == "":
+    SystemExit("SDP ticket: provided Environment field doesn't match any variable set in Terraform environment")
+else:
+    ws_varset = TerraformApi.workspace_varset_set(TOKEN, varset_id, workspace_id=ws_create_content["data"]["id"])
+    ws_varset.raise_for_status()
