@@ -118,16 +118,16 @@ def workspace_upload_code(token: str, filepath: str, upload_url: str):
 def workspace_var_create(token: str, var_name: str, var_val: str, workspace_id: str, hcl=True, sensitive=False,
                          description=None):
     """
-    TODO: refactor this
     construct terraform run payload, can only create 1 variable at once
     https://developer.hashicorp.com/terraform/cloud-docs/api-docs/workspace-variables
     :param token: Terraform user token
-    :param var_name: string, variable name
-    :param var_val: string, variable value
-    :param description: string, description of the variable
-    :param hcl: bool, parse this variable as HCL, allow to interpolate at run time
-    :param sensitive: bool, sensitive variable are never shown in UI or API
-    :return: dict, JSON payload
+    :param var_name: variable name
+    :param var_val: variable value
+    :param workspace_id: Terraform's workspace ID get from Terraform's API
+    :param description: description of the variable
+    :param hcl: parse this variable as HCL, allow to interpolate at run time
+    :param sensitive: sensitive variable are never shown in UI or API
+    :return: API response
     """
     if description is not None:
         payload = {"data": {"type": "vars", "attributes": {"key": var_name, "value": var_val, "description": description,
@@ -149,14 +149,12 @@ def workspace_var_create(token: str, var_name: str, var_val: str, workspace_id: 
 
 def workspace_varset_set(token: str, varset_id: str, workspace_id: str):
     """
-    TODO: refactor this
     Attach Terraform variable set to a workspace
     Construct API request and send API request for attaching variable set to Terraform workspace
     https://developer.hashicorp.com/terraform/cloud-docs/api-docs/variable-sets#apply-variable-set-to-workspaces
     :param token: Terraform user token
-    :param varset_id: string, variable name
-    :param workspace_id: string, variable value
-    :return: dict, JSON payload
+    :param varset_id: variable set ID get from tf_varset_get func
+    :return: API response
     """
     payload = {"data": [{"type": "workspaces", "id": f"{workspace_id}"}]}
     header = {"Content-type": "application/vnd.api+json", "Authorization": f"Bearer {token}"}
@@ -202,3 +200,45 @@ def tf_varset_get(token: str, varset_name: str, terraform_org: str):
             break
 
     return varset_id
+
+
+def workspace_run(token: str, workspace_id: str):
+    """
+    Create a Terraform workspace run, a run flow contains Terraform plan: check policies, cost estimation if it's a
+    cloud provider, Terraform apply: run apply the Terraform, making changes/provisioning the resources.
+    Construct API request and send API request for launching the Terraform run of a workspace
+    https://developer.hashicorp.com/terraform/cloud-docs/api-docs/run#attributes
+    https://developer.hashicorp.com/terraform/cloud-docs/api-docs/run#create-a-run
+    :param token: Terraform user token
+    :param workspace_id: Terraform workspace id
+    :return: API response
+    """
+    payload = {"data": {"types": "runs", "relationship": {"workspace": {"data": {"type": "workspaces",
+                                                                                 "id": workspace_id}}}}}
+    header = {"Content-type": "application/vnd.api+json", "Authorization": f"Bearer {token}"}
+    url = f"https://app.terraform.io/api/v2/runs"
+    try:
+        req = requests.post(url, json=payload, headers=header, verify=True)
+    except requests.exceptions.RequestException as err:
+        raise SystemExit(err)
+
+    return req
+
+
+def tf_run_get(token: str, run_id: str):
+    """
+    Fetch Terraform run status
+    Construct API request and send API request for fetching the Terraform run of a workspace
+    https://developer.hashicorp.com/terraform/cloud-docs/api-docs/run#get-run-details
+    :param token: Terraform user token
+    :param run_id: Terraform run ID, generated after a Terraform run created
+    :return: API response
+    """
+    header = {"Content-type": "application/vnd.api+json", "Authorization": f"Bearer {token}"}
+    url = f"https://app.terraform.io/api/v2/runs/{run_id}"
+    try:
+        req = requests.get(url, headers=header, verify=True)
+    except requests.exceptions.RequestException as err:
+        raise SystemExit(err)
+
+    return req
