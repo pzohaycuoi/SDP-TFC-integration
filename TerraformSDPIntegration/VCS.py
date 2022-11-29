@@ -1,8 +1,9 @@
 import git
 import os
+import tarfile
 
 
-def git_clone(repo_url, folder_path):
+def git_clone_and_tar(repo_url, folder_path):
     """
     Use GitPython to clone repository,
     Get the git directory so get_tf_var function can find all available variables
@@ -15,7 +16,13 @@ def git_clone(repo_url, folder_path):
     except AssertionError as err:
         raise SystemExit(err)
 
-    return repo
+    repo_dir = repo.git_dir.replace(".git", "")
+    repo_name = repo.remotes.origin.url.split('.git')[0].split('/')[-1]
+    tar_file = f"../temp/{repo_name}.tar.gz"
+    with tarfile.open(tar_file, "w:gz") as tar:
+        tar.add(repo_dir, arcname=os.path.basename(repo_dir))
+
+    return tar_file
 
 
 def find_all(name, path):
