@@ -4,7 +4,7 @@ import json
 import TerraformApi
 import SDP
 import VCS
-import tarfile
+import common
 from subprocess import Popen
 
 
@@ -130,11 +130,13 @@ else:
 # Terraform created by this script set the auto-apply == false, so after Terraform plan, it will wait for confirmation
 tf_run = TerraformApi.workspace_run(TOKEN, workspace_id)
 tf_run.raise_for_status()
-tf_run_json = json.loads(tf_run)
+
+# clean up temp folder
+common.cleanup_temp("../temp")
 
 # Because SDP only script run up to 60 seconds, so we pass data into a temp file and create a new independent process
-with open("..temp/temp.json", "w") as file:
-    file.write(tf_run_json)
+with open("../temp/temp.json", "w") as file:
+    file.write(tf_run.text)
 
 CREATE_NEW_PROCESS_GROUP = 0x00000200
 DETACHED_PROCESS = 0x00000008
