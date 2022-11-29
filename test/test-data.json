@@ -86,7 +86,7 @@
         {
           "name": "UDF_CHAR1",
           "label": "workspace_name",
-          "value": "test_workspace42"
+          "value": "test_workspace79"
         },
         {
           "name": "UDF_CHAR3",
@@ -105,7 +105,7 @@
         },
         {
           "name": "UDF_CHAR7",
-          "label": "Envionment",
+          "label": "Environment",
           "value": "dev"
         }
       ],
