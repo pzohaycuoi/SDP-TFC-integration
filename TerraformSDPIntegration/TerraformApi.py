@@ -213,7 +213,7 @@ def workspace_run(token: str, workspace_id: str):
     :param workspace_id: Terraform workspace id
     :return: API response
     """
-    payload = {"data": {"types": "runs", "relationship": {"workspace": {"data": {"type": "workspaces",
+    payload = {"data": {"types": "runs", "relationships": {"workspace": {"data": {"type": "workspaces",
                                                                                  "id": workspace_id}}}}}
     header = {"Content-type": "application/vnd.api+json", "Authorization": f"Bearer {token}"}
     url = f"https://app.terraform.io/api/v2/runs"
