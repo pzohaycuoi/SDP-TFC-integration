@@ -115,7 +115,7 @@ def workspace_upload_code(token: str, filepath: str, upload_url: str):
     return req
 
 
-def workspace_var_create(token: str, var_name: str, var_val: str, workspace_id: str, hcl=True, sensitive=False,
+def workspace_var_create(token: str, var_name: str, var_val: str, workspace_id: str, hcl=False, sensitive=False,
                          description=None):
     """
     construct terraform run payload, can only create 1 variable at once
@@ -130,9 +130,10 @@ def workspace_var_create(token: str, var_name: str, var_val: str, workspace_id: 
     :return: API response
     """
     if description is not None:
-        payload = {"data": {"type": "vars", "attributes": {"key": var_name, "value": var_val, "description": description,
-                                                           "category": "terraform", "hcl": hcl,
-                                                           "sensitive": sensitive}}}
+        payload = {
+            "data": {"type": "vars", "attributes": {"key": var_name, "value": var_val, "description": description,
+                                                    "category": "terraform", "hcl": hcl,
+                                                    "sensitive": sensitive}}}
     else:
         payload = {"data": {"type": "vars", "attributes": {"key": var_name, "value": var_val, "category": "terraform",
                                                            "hcl": hcl, "sensitive": sensitive}}}
@@ -181,6 +182,7 @@ def tf_varset_get(token: str, varset_name: str, terraform_org: str):
     """
     header = {"Content-type": "application/vnd.api+json", "Authorization": f"Bearer {token}"}
     varset_id = ""
+    relationships = None
     i = 0
     while True:
         i += 1
@@ -195,11 +197,12 @@ def tf_varset_get(token: str, varset_name: str, terraform_org: str):
             for data in res['data']:
                 if data["attributes"]["name"] == varset_name:
                     varset_id = data["id"]
+                    relationships = data["relationships"]["workspaces"]["data"]
                     break
         else:
             break
 
-    return varset_id
+    return varset_id, relationships
 
 
 def workspace_run(token: str, workspace_id: str):
@@ -214,7 +217,7 @@ def workspace_run(token: str, workspace_id: str):
     :return: API response
     """
     payload = {"data": {"types": "runs", "relationships": {"workspace": {"data": {"type": "workspaces",
-                                                                                 "id": workspace_id}}}}}
+                                                                                  "id": workspace_id}}}}}
     header = {"Content-type": "application/vnd.api+json", "Authorization": f"Bearer {token}"}
     url = f"https://app.terraform.io/api/v2/runs"
     try:
@@ -242,3 +245,48 @@ def tf_run_get(token: str, run_id: str):
         raise SystemExit(err)
 
     return req
+
+
+def workspace_add_repo(token: str, workspace_id: str, repo_url: str, gitlab_token: str):
+    """
+    Add a VCS to Terraform workspace configuration
+    Construct API request and send API request for updating the Terraform workspace configuration
+    :param token: Terraform user token
+    :param workspace_id: Terraform workspace ID
+    :param repo_url: gitlab repository url
+    :param gitlab_token: Gitlab access token
+    :return: Terraform workspace information
+    """
+    payload = {"data": {"attributes": {"vcs-repo": {"identifier": repo_url, "oauth-token-id": gitlab_token}}}}
+    header = {"Content-type": "application/vnd.api+json", "Authorization": f"Bearer {token}"}
+    url = f"https://app.terraform.io/api/v2/workspaces/{workspace_id}"
+    try:
+        req = requests.patch(url, json=payload, headers=header, verify=True)
+    except requests.exceptions.RequestException as err:
+        raise SystemExit(err)
+
+    return req
+
+
+def workspace_var_get(token: str, terraform_org: str, workspace_name: str):
+    header = {"Content-type": "application/vnd.api+json", "Authorization": f"Bearer {token}"}
+    url = f"https://app.terraform.io/api/v2/vars?filter%5Borganization%5D%5Bname%5D={terraform_org}&filter%5Bworkspace%5D%5Bname%5D={workspace_name}"
+    try:
+        req = requests.get(url, headers=header, verify=True)
+    except requests.exceptions.RequestException as err:
+        raise SystemExit(err)
+
+    data = json.loads(req.content)
+    return data
+
+
+def workspace_var_update(token: str, var_id: str, var_name: str, var_value: any):
+    payload = {"data": {"id": var_id, "attributes": {"key": var_name, "value": var_value}, "type": "vars"}}
+    header = {"Content-type": "application/vnd.api+json", "Authorization": f"Bearer {token}"}
+    url = f"https://app.terraform.io/api/v2/vars/{var_id}"
+    try:
+        req = requests.patch(url, json=payload,headers=header, verify=True)
+    except requests.exceptions.HTTPError as err:
+        raise requests.exceptions.RequestException
+
+    return req.status_code

@@ -86,22 +86,22 @@
         {
           "name": "UDF_CHAR1",
           "label": "workspace_name",
-          "value": "test_workspace79"
+          "value": "test_workspace85"
         },
         {
           "name": "UDF_CHAR3",
           "label": "db_name",
-          "value": "nambeo_db_name"
+          "value": "nambeodb2"
         },
         {
           "name": "UDF_CHAR5",
           "label": "db_username",
-          "value": "nambeo_db_username"
+          "value": "nambeouser"
         },
         {
           "name": "UDF_CHAR6",
           "label": "db_password",
-          "value": "nambeo_db_pwd"
+          "value": "nambeoPaswodasd21W#$%"
         },
         {
           "name": "UDF_CHAR7",

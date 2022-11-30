@@ -1,6 +1,7 @@
 import os
 import stat
 
+
 def cleanup_temp(top):
     for root, dirs, files in os.walk(top, topdown=False):
         for name in files:

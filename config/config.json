@@ -1,6 +1,6 @@
 {
   "variable-set": {
-    "dev": "env-dev-cred",
+    "dev": "CREDENTIAL",
     "uat": "env-dev-cred",
     "test": "test",
     "prod": "CREDENTIAL"
