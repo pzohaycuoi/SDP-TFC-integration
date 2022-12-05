@@ -1,4 +1,5 @@
 import json
+import requests
 
 
 def convert_json(file_path: str):
@@ -71,3 +72,58 @@ def get_env(env_name: str, config_json="../config/config.json"):
             varset_name = field["field"]
 
     return varset_name
+
+
+def add_task(token: str, change_id: str, task_name: str, task_description: str):
+    """
+    API request for creating new task for a change ticket
+    :param token: SDP user API token
+    :param change_id: SDP change ID number
+    :param task_name: name of the task
+    :param task_description: description of the task
+    :return: Task ID
+    """
+    payload = {
+        "task": {
+            "title": task_name,
+            "description": task_description,
+            "status": {
+                "name": "Open"
+            },
+            "change": {
+                "id": change_id
+            }
+        }
+    }
+    header = {"technician_key": token}
+    url = f"http://13.228.176.221:8080/api/v3/tasks"
+    try:
+        req = requests.get(url, data=payload, headers=header, verify=False)
+    except requests.exceptions.RequestException as err:
+        raise SystemExit(err)
+
+    req.raise_for_status()
+    data = json.loads(req.content)
+    task_id = data["task"]["id"]
+    return task_id
+
+
+def update_task(token: str, task_id: str):
+    payload = {
+        "task": {
+            "status": {
+                "name": "Open"
+            }
+        }
+    }
+    header = {"technician_key": token}
+    url = f"http://13.228.176.221:8080/api/v3/tasks/{task_id}"
+    try:
+        req = requests.get(url, data=payload, headers=header, verify=False)
+    except requests.exceptions.RequestException as err:
+        raise SystemExit(err)
+
+    req.raise_for_status()
+    data = json.loads(req.content)
+    task_id = data["task"]["id"]
+    return task_id

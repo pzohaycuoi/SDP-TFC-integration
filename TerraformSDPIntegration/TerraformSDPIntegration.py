@@ -157,7 +157,6 @@ else:
 
             # SETTING UP WORKSPACE VARIABLES AND VARIABLE SETS #
             # Set variables of workspace (TFvars)
-            # TODO: Check variable is already set or not
             tf_workspace_var_check = TerraformApi.workspace_var_get(TF_TOKEN, TF_ORG, tf_workspace_name)
 
             if not tf_workspace_var_check["data"]:
@@ -202,6 +201,11 @@ else:
                                                                      workspace_id=tf_workspace_id)
                 workspace_varset.raise_for_status()
 
+            # Create workspace notification config
+            tf_team_id = TerraformApi.tf_team_get(TF_TOKEN, "owners", TF_ORG)
+            tf_user_id_list = TerraformApi.tf_team_member_get(TF_TOKEN, tf_team_id)
+            TerraformApi.tf_notification_set(TF_TOKEN, tf_workspace_id, tf_user_id_list)
+
             # TERRAFORM RUN
             # After finished setting up Terraform workspace, workspace variable, variable set, create the Terraform run
             # Terraform created by this script set the auto-apply == false, so after Terraform plan,
@@ -210,10 +214,20 @@ else:
             tf_run.raise_for_status()
 
             # Because SDP only script run up to 60 seconds, so we pass data into a temp file and
-            # create a new independent process
+            # Save run data so new process have something to do
             with open("../temp/temp.json", "w") as file:
                 file.write(tf_run.text)
 
+            # Gather some metadata into file for new process
+            data = {
+                "tf_workspace_name": tf_workspace_name
+            }
+            data = str(data)
+
+            with open(f"../temp/{tf_workspace_name}", "w") as file:
+                file.write(data)
+
+            # create a new independent process
             CREATE_NEW_PROCESS_GROUP = 0x00000200
             DETACHED_PROCESS = 0x00000008
 

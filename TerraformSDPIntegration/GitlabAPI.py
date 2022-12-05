@@ -2,7 +2,6 @@ import requests
 import json
 
 
-# TODO: create fork request
 def project_fork(token: str, project_id: str, project_name: str, namespace: str):
     """
     Fork a Gitlab project, use this to create a repository for Terraform workspace
@@ -52,4 +51,4 @@ def project_get(token: str, project_name=None, project_id=None):
 
         return req
     else:
-        raise ("cac")
+        raise ("cac") # TODO: change this

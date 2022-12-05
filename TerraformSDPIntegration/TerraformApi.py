@@ -290,3 +290,117 @@ def workspace_var_update(token: str, var_id: str, var_name: str, var_value: any)
         raise requests.exceptions.RequestException
 
     return req.status_code
+
+
+def tf_notification_set(token: str, workspace_id: str, user_id_list: str):
+    payload = {
+          "data": {
+            "type": "notification-configurations",
+            "attributes": {
+              "destination-type": "email",
+              "enabled": "True",
+              "name": "Notify organization users about run",
+              "triggers": [
+                "run:applying",
+                "run:completed",
+                "run:created",
+                "run:errored",
+                "run:needs_attention",
+                "run:planning"
+              ]
+            },
+            "relationships": {
+               "users": {
+                  "data": user_id_list
+               }
+            }
+          }
+        }
+    header = {"Content-type": "application/vnd.api+json", "Authorization": f"Bearer {token}"}
+    url = f"https://app.terraform.io/api/v2/workspaces/{workspace_id}/notification-configurations"
+    try:
+        req = requests.post(url, json=payload, headers=header, verify=True)
+    except requests.exceptions.HTTPError as err:
+        raise requests.exceptions.RequestException
+
+    return req.status_code
+
+
+def tf_team_get(token : str, group_name: str, terraform_org: str):
+    """
+
+    :param token:
+    :param group_name:
+    :param terraform_org:
+    :return:
+    """
+    url = f"https://app.terraform.io/api/v2/organizations/{terraform_org}/teams"
+    header = {"Content-type": "application/vnd.api+json", "Authorization": f"Bearer {token}"}
+    i = 0
+    team_id = ""
+    while True:
+        i += 1
+        url = f"https://app.terraform.io/api/v2/organizations/{terraform_org}/teams?page%5Bnumber%5D={i}&page%5Bsize%5D=100"
+        try:
+            req = requests.get(url, headers=header, verify=True)
+        except requests.exceptions.HTTPError as err:
+            raise SystemExit(err)
+
+        res = json.loads(req.text)
+        if team_id == "":
+            for data in res['data']:
+                if data["attributes"]["name"] == group_name:
+                    team_id = data["id"]
+                    break
+        else:
+            break
+
+    return team_id
+
+
+def tf_team_member_get(token: str, team_id: str):
+    url = f"https://app.terraform.io/api/v2/teams/{team_id}"
+    header = {"Content-type": "application/vnd.api+json", "Authorization": f"Bearer {token}"}
+    try:
+        req = requests.get(url, headers=header, verify=True)
+    except requests.exceptions.HTTPError as err:
+        raise SystemExit(err)
+
+    data = json.loads(req.content)
+    user_list = []
+
+    if data["data"] is None:
+        SystemExit()
+    elif "relationships" not in data["data"]:
+        SystemExit()
+    elif data["data"]["relationships"]["users"]["data"] is None:
+        SystemExit()
+    else:
+        users = data["data"]["relationships"]["users"]["data"]
+        for user in users:
+            if user["type"] == "users":
+                user_list.append(user)
+            else:
+                continue
+
+    return user_list
+
+
+def tf_plan_get(token: str, plan_id: str, file_name: str):
+    """
+    When Terraform plan status is "finished", Terraform plan result will be available to check.
+    Get Terraform plan result detail in json
+    :param token: Terraform user token
+    :param plan_id: Terraform plan id
+    :return: Terraform plan result in JSON
+    """
+    url = f"https://app.terraform.io/api/v2/runs/{plan_id}/plan/json-output"
+    header = {"Content-type": "application/vnd.api+json", "Authorization": f"Bearer {token}"}
+    try:
+        req = requests.get(url, headers=header, verify=True)
+    except requests.exceptions.HTTPError as err:
+        raise SystemExit(err)
+
+    with open(file_name, "w") as file:
+        file.write(req.text)
+
