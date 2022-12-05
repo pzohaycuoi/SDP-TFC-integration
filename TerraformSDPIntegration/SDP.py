@@ -74,7 +74,7 @@ def get_env(env_name: str, config_json="../config/config.json"):
     return varset_name
 
 
-def add_task(token: str, change_id: str, task_name: str, task_description: str):
+def task_add(token: str, change_id: str, task_name: str, task_description: str):
     """
     API request for creating new task for a change ticket
     :param token: SDP user API token
@@ -108,11 +108,11 @@ def add_task(token: str, change_id: str, task_name: str, task_description: str):
     return task_id
 
 
-def update_task(token: str, task_id: str):
+def task_update(token: str, task_id: str, status: str):
     payload = {
         "task": {
             "status": {
-                "name": "Open"
+                "name": status
             }
         }
     }
@@ -127,3 +127,35 @@ def update_task(token: str, task_id: str):
     data = json.loads(req.content)
     task_id = data["task"]["id"]
     return task_id
+
+
+def worklog_add(token: str, server: str, task_id: str, description: str, time_start, time_end):
+    payload = {
+        "worklog": {
+            "task": {
+                "id": task_id
+            },
+            "description": description,
+            "technician": {
+                "name": "administrator"
+            },
+            "start_time": {
+                "value": time_start
+            },
+            "end_time": {
+                "value": time_end
+            }
+        }
+    }
+    header = {"technician_key": token}
+    url = f"{server}/api/v3/worklog"
+    try:
+        req = requests.get(url, data=payload, headers=header, verify=False)
+    except requests.exceptions.RequestException as err:
+        raise SystemExit(err)
+
+    req.raise_for_status()
+    data = json.loads(req.content)
+    worklog_id = data["worklog"]["id"]
+    return worklog_id
+

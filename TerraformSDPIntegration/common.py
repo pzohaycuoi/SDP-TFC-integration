@@ -1,6 +1,7 @@
 import os
 import stat
 from dotenv import load_dotenv
+import datetime
 
 
 def cleanup_temp(top):
@@ -24,20 +25,45 @@ def dotenv_load():
     GITLAB_NAMESPACE = os.getenv("GITLAB_NAMESPACE")
     REPO = os.getenv("REPO")
     OAUTH_TOKEN_ID = os.getenv("OAUTH_TOKEN_ID")
+    SDP_TOKEN = os.getenv("SDP_TOKEN")
+    SDP_SERVER = os.getenv("SDP_SERVER")
 
     if (TF_TOKEN == '') or (TF_TOKEN is None):
-        raise SystemExit("No dotenv with name TOKEN provided, exiting...")
+        raise ValueError("No dotenv with name TOKEN provided, exiting...")
     elif (TF_ORG == '') or (TF_ORG is None):
         raise SystemExit("No dotenv with name TF_ORG provided, exiting...")
     elif (GITLAB_TOKEN == '') or (GITLAB_TOKEN is None):
-        raise SystemExit("No dotenv with name TF_ORG provided, exiting...")
+        raise SystemExit("No dotenv with name TOKEN provided, exiting...")
     elif (GITLAB_REPO_ID == '') or (GITLAB_REPO_ID is None):
-        raise SystemExit("No dotenv with name TF_ORG provided, exiting...")
+        raise SystemExit("No dotenv with name GITLAB_REPO_ID provided, exiting...")
     elif (GITLAB_NAMESPACE == '') or (GITLAB_NAMESPACE is None):
-        raise SystemExit("No dotenv with name TF_ORG provided, exiting...")
+        raise SystemExit("No dotenv with name GITLAB_NAMESPACE provided, exiting...")
     elif (REPO == '') or (REPO is None):
-        raise SystemExit("No dotenv with name TF_ORG provided, exiting...")
+        raise SystemExit("No dotenv with name REPO provided, exiting...")
     elif (OAUTH_TOKEN_ID == '') or (OAUTH_TOKEN_ID is None):
-        raise SystemExit("No dotenv with name TF_ORG provided, exiting...")
+        raise SystemExit("No dotenv with name OAUTH_TOKEN_ID provided, exiting...")
+    elif (SDP_TOKEN == '') or (SDP_TOKEN is None):
+        raise SystemExit("No dotenv with name SDP_TOKEN provided, exiting...")
+    elif (SDP_SERVER == '') or (SDP_SERVER is None):
+        raise SystemExit("No dotenv with name SDP_SERVER provided, exiting...")
     else:
-        return TF_TOKEN, TF_ORG, GITLAB_TOKEN, GITLAB_REPO_ID, GITLAB_NAMESPACE, REPO, OAUTH_TOKEN_ID
+        return TF_TOKEN, TF_ORG, GITLAB_TOKEN, GITLAB_REPO_ID, GITLAB_NAMESPACE, REPO, OAUTH_TOKEN_ID, SDP_TOKEN, \
+               SDP_SERVER
+
+
+def folder_create(name: str, path: str):
+    current_time = datetime.datetime.now()
+    str_time = current_time.strftime("%d-%m-%Y-%H-%M-%S")
+    folder_name = f"{name}-{str_time}"
+    # folder_path = os.path.join(path, folder_name)
+    folder_path = f"{path}{folder_name}/"
+
+    if os.path.exists(folder_path):
+        return folder_path
+    else:
+        try:
+            os.mkdir(folder_path)
+        except OSError as err:
+            SystemExit(err)
+
+        return folder_path

@@ -287,7 +287,7 @@ def workspace_var_update(token: str, var_id: str, var_name: str, var_value: any)
     try:
         req = requests.patch(url, json=payload,headers=header, verify=True)
     except requests.exceptions.HTTPError as err:
-        raise requests.exceptions.RequestException
+        raise err
 
     return req.status_code
 
@@ -321,7 +321,7 @@ def tf_notification_set(token: str, workspace_id: str, user_id_list: str):
     try:
         req = requests.post(url, json=payload, headers=header, verify=True)
     except requests.exceptions.HTTPError as err:
-        raise requests.exceptions.RequestException
+        raise err
 
     return req.status_code
 
@@ -386,7 +386,7 @@ def tf_team_member_get(token: str, team_id: str):
     return user_list
 
 
-def tf_plan_get(token: str, plan_id: str, file_name: str):
+def tf_plan_get(token: str, plan_id: str, file_path: str):
     """
     When Terraform plan status is "finished", Terraform plan result will be available to check.
     Get Terraform plan result detail in json
@@ -401,6 +401,7 @@ def tf_plan_get(token: str, plan_id: str, file_name: str):
     except requests.exceptions.HTTPError as err:
         raise SystemExit(err)
 
-    with open(file_name, "w") as file:
+    with open(file_path, "w") as file:
         file.write(req.text)
 
+    return file_path

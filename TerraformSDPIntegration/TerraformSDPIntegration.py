@@ -7,6 +7,7 @@ import VCS
 import common
 from subprocess import Popen
 import GitlabAPI
+import sys
 
 
 # VALIDATE INPUT AND CHECK RESOURCE EXISTENCE
@@ -45,7 +46,7 @@ else:
     VCS.git_clone_and_tar(REPO, repo_dir)
 
     # Get Terraform variables.tf file list
-    var_files = VCS.find_all("variables.tf", "../temp")
+    var_files = VCS.find_all("variables.tf", repo_dir)
 
     # Extract variables from Terraform variables.tf files
     var_list = []
@@ -59,8 +60,8 @@ else:
     var_list = list(var_list)
 
     # load $COMPLETE_JSON_FILE from SDP
-    # input_file = sys.argv[1]  # uncomment this after testing is done
-    input_file = '../test/test-data.json'  # for testing only, comment this line after done testing
+    input_file = sys.argv[1]  # uncomment this after testing is done
+    # input_file = '../test/test-data.json'  # for testing only, comment this line after done testing
     try:
         opt_data = SDP.convert_json(input_file)
     except AssertionError as err:
@@ -214,17 +215,20 @@ else:
             tf_run.raise_for_status()
 
             # Because SDP only script run up to 60 seconds, so we pass data into a temp file and
+            # Create folder
+            folder = common.folder_create(tf_workspace_name, "../temp/")
             # Save run data so new process have something to do
-            with open("../temp/temp.json", "w") as file:
+            with open(f"{folder}temp.json", "w") as file:
                 file.write(tf_run.text)
 
-            # Gather some metadata into file for new process
+            # Gather some data into file for new process
             data = {
-                "tf_workspace_name": tf_workspace_name
+                "tf_workspace_name": tf_workspace_name,
+                "change_id": opt_data["INPUT_DATA"]["entity_data"]["template"]["id"]
             }
             data = str(data)
 
-            with open(f"../temp/{tf_workspace_name}", "w") as file:
+            with open(f"{folder}data.json", "w") as file:
                 file.write(data)
 
             # create a new independent process
@@ -232,5 +236,5 @@ else:
             DETACHED_PROCESS = 0x00000008
 
             Popen(["python", "./TerraformRunFetchStatus.py"],
-                  stdin=None, stdout=None, stderr=None, shell=True,
+                  stdin=folder, stdout=None, stderr=None, shell=True,
                   creationflags=DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP)
