@@ -129,6 +129,10 @@ def workspace_var_create(token: str, var_name: str, var_val: str, workspace_id: 
     :param sensitive: sensitive variable are never shown in UI or API
     :return: API response
     """
+    if isinstance(var_val, str):
+    if "[" in var_val:
+        hcl = True
+    
     if description is not None:
         payload = {
             "data": {"type": "vars", "attributes": {"key": var_name, "value": var_val, "description": description,
