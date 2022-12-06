@@ -83,22 +83,23 @@ def task_add(token: str, change_id: str, task_name: str, task_description: str):
     :param task_description: description of the task
     :return: Task ID
     """
-    payload = {
+    payload = """{
         "task": {
-            "title": task_name,
-            "description": task_description,
+            "title": "%s",
+            "description": "%s",
             "status": {
                 "name": "Open"
             },
             "change": {
-                "id": change_id
+                "id": "%s"
             }
         }
-    }
+    }""" % (task_name, task_description, change_id)
+    full_payload = {'input_data': payload}
     header = {"technician_key": token}
     url = f"http://13.228.176.221:8080/api/v3/tasks"
     try:
-        req = requests.get(url, data=payload, headers=header, verify=False)
+        req = requests.post(url, data=full_payload, headers=header, verify=False)
     except requests.exceptions.RequestException as err:
         raise SystemExit(err)
 
@@ -109,17 +110,18 @@ def task_add(token: str, change_id: str, task_name: str, task_description: str):
 
 
 def task_update(token: str, task_id: str, status: str):
-    payload = {
+    payload = """{
         "task": {
             "status": {
-                "name": status
+                "name": "%s"
             }
         }
-    }
+    }""" % status
+    payload = {'input_data': payload}
     header = {"technician_key": token}
     url = f"http://13.228.176.221:8080/api/v3/tasks/{task_id}"
     try:
-        req = requests.get(url, data=payload, headers=header, verify=False)
+        req = requests.post(url, data=payload, headers=header, verify=False)
     except requests.exceptions.RequestException as err:
         raise SystemExit(err)
 
@@ -130,23 +132,26 @@ def task_update(token: str, task_id: str, status: str):
 
 
 def worklog_add(token: str, server: str, task_id: str, description: str, time_start, time_end):
-    payload = {
+    time_start = int(time_start)
+    time_end = int(time_end)
+    payload = """{
         "worklog": {
             "task": {
-                "id": task_id
+                "id": "%s"
             },
-            "description": description,
+            "description": "%s",
             "technician": {
                 "name": "administrator"
             },
             "start_time": {
-                "value": time_start
+                "value": "%s"
             },
             "end_time": {
-                "value": time_end
+                "value": "%s"
             }
         }
-    }
+    }""" % (task_id, description, time_start, time_end)
+    payload = {'input_data': payload}
     header = {"technician_key": token}
     url = f"{server}/api/v3/worklog"
     try:

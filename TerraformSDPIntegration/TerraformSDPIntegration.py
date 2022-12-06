@@ -10,6 +10,14 @@ import GitlabAPI
 import sys
 
 
+# load $COMPLETE_JSON_FILE from SDP
+# input_file = sys.argv[1]  # uncomment this after testing is done
+input_file = '../test/test-data.json'  # for testing only, comment this line after done testing
+try:
+    opt_data = SDP.convert_json(input_file)
+except AssertionError as err:
+    raise SystemExit(err)
+
 # VALIDATE INPUT AND CHECK RESOURCE EXISTENCE
 # load .env file and
 # check if TOKEN and TF_ORG have value
@@ -37,7 +45,8 @@ elif (REPO == '') or (REPO is None):
 elif (OAUTH_TOKEN_ID == '') or (OAUTH_TOKEN_ID is None):
     raise SystemExit("No dotenv with name TF_ORG provided, exiting...")
 else:
-    repo_dir = "../temp/repo"
+    cur_dir = os.path.dirname(__file__)
+    repo_dir = os.path.join(cur_dir, "../temp/repo")
     # Clean up repo dir before cloning
     if os.path.exists(repo_dir):
         common.cleanup_temp(repo_dir)
@@ -58,14 +67,6 @@ else:
     # get unique value from var_list[] by converting to set
     var_list = set(var_list)
     var_list = list(var_list)
-
-    # load $COMPLETE_JSON_FILE from SDP
-    input_file = sys.argv[1]  # uncomment this after testing is done
-    # input_file = '../test/test-data.json'  # for testing only, comment this line after done testing
-    try:
-        opt_data = SDP.convert_json(input_file)
-    except AssertionError as err:
-        raise SystemExit(err)
 
     # Get SDP custom field values, base on Terraform variable file
     field_list = SDP.get_field(opt_data)
@@ -94,7 +95,8 @@ else:
 
     # Get variable set name from config file
     try:
-        config_data = SDP.convert_json("../config/config.json")
+        config_file = os.path.join(cur_dir, "../config/config.json")
+        config_data = SDP.convert_json(config_file)
     except AssertionError as err:
         raise SystemExit(err)
 
@@ -216,9 +218,11 @@ else:
 
             # Because SDP only script run up to 60 seconds, so we pass data into a temp file and
             # Create folder
-            folder = common.folder_create(tf_workspace_name, "../temp/")
+            temp_folder = os.path.join(cur_dir, "../temp/")
+            folder = common.folder_create(tf_workspace_name, temp_folder)
             # Save run data so new process have something to do
-            with open(f"{folder}temp.json", "w") as file:
+            temp_file = os.path.join(folder, "temp.json")
+            with open(f"{temp_file}", "w") as file:
                 file.write(tf_run.text)
 
             # Gather some data into file for new process
@@ -228,13 +232,22 @@ else:
             }
             data = str(data)
 
-            with open(f"{folder}data.json", "w") as file:
+            data_file = os.path.join(folder, "data.json")
+            with open(data_file, "w") as file:
                 file.write(data)
 
-            # create a new independent process
-            CREATE_NEW_PROCESS_GROUP = 0x00000200
-            DETACHED_PROCESS = 0x00000008
+            # file path to the next script
+            next_script = os.path.join(cur_dir, "TerraformRunFetchStatus.py")
 
-            Popen(["python", "./TerraformRunFetchStatus.py"],
-                  stdin=folder, stdout=None, stderr=None, shell=True,
-                  creationflags=DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP)
+            # Check platform
+            if sys.platform == "win32":
+                # create a new independent process
+                CREATE_NEW_PROCESS_GROUP = 0x00000200
+                DETACHED_PROCESS = 0x00000008
+
+                Popen([f"python {next_script} {folder}"],
+                      stdin=None, stdout=None, stderr=None, shell=True,
+                      creationflags=DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP)
+            else:
+                Popen([f"python3 {next_script} {folder}"],
+                      stdin=None, stdout=None, stderr=None, shell=True)

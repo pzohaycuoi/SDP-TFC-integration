@@ -55,8 +55,8 @@ def folder_create(name: str, path: str):
     current_time = datetime.datetime.now()
     str_time = current_time.strftime("%d-%m-%Y-%H-%M-%S")
     folder_name = f"{name}-{str_time}"
-    # folder_path = os.path.join(path, folder_name)
-    folder_path = f"{path}{folder_name}/"
+    folder_path = os.path.join(path, folder_name)
+    # folder_path = f"{path}{folder_name}/"
 
     if os.path.exists(folder_path):
         return folder_path
