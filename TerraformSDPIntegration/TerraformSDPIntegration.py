@@ -12,7 +12,7 @@ import sys
 
 # load $COMPLETE_JSON_FILE from SDP
 # input_file = sys.argv[1]  # uncomment this after testing is done
-input_file = '../test/test-data.json'  # for testing only, comment this line after done testing
+input_file = '../test/test-new.json'  # for testing only, comment this line after done testing
 try:
     opt_data = SDP.convert_json(input_file)
 except AssertionError as err:
@@ -49,6 +49,7 @@ else:
     repo_dir = os.path.join(cur_dir, "../temp/repo")
     # Clean up repo dir before cloning
     if os.path.exists(repo_dir):
+
         common.cleanup_temp(repo_dir)
 
     # Get Terraform code from repository
@@ -137,7 +138,6 @@ else:
             else:
                 # Create Terraform workspace
                 tf_workspace_create = TerraformApi.workspace_create(TF_TOKEN, TF_ORG, tf_workspace_name, auto_apply=False)
-                tf_workspace_create.raise_for_status()
                 tf_workspace_get_json = json.loads(tf_workspace_create.content)
                 tf_workspace_id = tf_workspace_get_json["data"]["id"]
 
@@ -167,7 +167,6 @@ else:
                     if (field != "Environment") and (field != "workspace_name"):
                         tf_workspace_var_create = TerraformApi.workspace_var_create(TF_TOKEN, field, matching_field[field],
                                                                                     tf_workspace_id)
-                        tf_workspace_var_create.raise_for_status()
                     else:
                         continue
             else:
@@ -214,7 +213,7 @@ else:
             # Terraform created by this script set the auto-apply == false, so after Terraform plan,
             # it will wait for confirmation
             tf_run = TerraformApi.workspace_run(TF_TOKEN, tf_workspace_id)
-            tf_run.raise_for_status()
+            # tf_run.raise_for_status()
 
             # Because SDP only script run up to 60 seconds, so we pass data into a temp file and
             # Create folder
@@ -227,8 +226,8 @@ else:
 
             # Gather some data into file for new process
             data = {
-                "tf_workspace_name": tf_workspace_name,
-                "change_id": opt_data["INPUT_DATA"]["entity_data"]["template"]["id"]
+                ''"tf_workspace_name"'': f"""{tf_workspace_name}""",
+                'change_id': f"""{opt_data["INPUT_DATA"]["entity_data"]["template"]["id"]}"""
             }
             data = str(data)
 
@@ -244,8 +243,9 @@ else:
                 # create a new independent process
                 CREATE_NEW_PROCESS_GROUP = 0x00000200
                 DETACHED_PROCESS = 0x00000008
+                command = ["python", next_script, folder]
 
-                Popen([f"python {next_script} {folder}"],
+                Popen(command,
                       stdin=None, stdout=None, stderr=None, shell=True,
                       creationflags=DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP)
             else:
