@@ -6,8 +6,8 @@ import time
 import SDPAPI
 import sys
 
-folder = sys.argv[1]  # Get folder path, created by TerraformSDIntegration.py
-# folder = '../temp/test_workspace890-dev-07-12-2022-10-40-01'
+# folder = sys.argv[1]  # Get folder path, created by TerraformSDIntegration.py
+folder = '../temp/test_workspace895-dev-07-12-2022-15-19-38'
 cur_dir = os.path.dirname(__file__)
 temp_file = os.path.join(folder, "temp.json")
 data_file = os.path.join(folder, "data.json")
@@ -38,12 +38,12 @@ task_plan_id = SDPAPI.task_add(SDP_TOKEN, SDP_SERVER, change_id, task_name, f"{w
 time_start = round(time.time() * 1000)
 
 # List of pending status
-status_pending_list = ["fetching", "queuing", "planning", "cost_estimating", "policy_checking",
+status_pending_list = ["fetching", "queuing", "planning", "cost_estimating", "policy_checking", "pending"
                        "post_plan_running", "applying", "apply_queued", "plan_queued", "queuing", "pre_plan_running"]
 status_completed_list = ["fetching_completed", "pre_plan_completed", "confirmed", "post_plan_completed",
-                         "planned_and_finished"]
+                         "cost_estimated", "planned_and_finished"]
 status_final_completed_list = ["applied"]
-status_plan_completed_list = ["pending", "cost_estimated", "planned"]
+status_plan_completed_list = ["planned"]
 status_error_list = ["discarded", "errored", "canceled", "force_canceled"]
 
 # Loop until Terraform run completed
@@ -56,7 +56,7 @@ while True:
     if i < 180:  # 30 minutes
         run_detail = TerraformApi.tf_run_get(TF_TOKEN, TF_SERVER, run_id)
         if run_detail["data"] is None:
-            time.sleep(2)
+            time.sleep(10)
             continue
         else:
             run_status = run_detail["data"]["attributes"]["status"]
@@ -74,6 +74,8 @@ while True:
                 SDPAPI.worklog_add(SDP_TOKEN, SDP_SERVER, task_plan_id, f"{workspace_name} plan completed",
                                    time_start, time_end)
                 break
+            else:
+                time.sleep(10)
     else:
         time_end = round(time.time() * 1000)
         SDPAPI.worklog_add(SDP_TOKEN, SDP_SERVER, task_plan_id, f"{workspace_name} plan failed: time out",

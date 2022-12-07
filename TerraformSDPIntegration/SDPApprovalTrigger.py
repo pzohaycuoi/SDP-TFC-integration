@@ -15,7 +15,10 @@ temp_file = os.path.join(cur_dir, "../temp/trigger.json")
 if not os.path.exists(temp_file):
     raise SystemExit(f"NO DATA FILE FOUND: {temp_file}")
 
-data = json.loads(temp_file)
+with open(temp_file) as file:
+    data = file.read()
+    data = json.loads(data)
+
 if data is None:
     raise SystemExit(f"FILE IS EMPTY: {temp_file}")
 elif "run_id" not in data:
@@ -36,11 +39,13 @@ TerraformApi.tf_run_apply(TF_TOKEN, TF_SERVER, run_id, comment)
 next_script = os.path.join(cur_dir, "TerraformFetchRunStatus.py")
 
 if sys.platform == "win32":
-    CREATE_NEW_PROCESS_GROUP = 0x00000200
-    DETACHED_PROCESS = 0x00000008
+    # CREATE_NEW_PROCESS_GROUP = 0x00000200
+    # DETACHED_PROCESS = 0x00000008
+    # command = ["python", next_script, folder_path]
+    # Popen(command, stdin=None, stdout=None, stderr=None, shell=True,
+    #       creationflags=DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP)
     command = ["python", next_script, folder_path]
-    Popen(command, stdin=None, stdout=None, stderr=None, shell=True,
-          creationflags=DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP)
+    Popen(command, stdin=None, stdout=None, stderr=None, shell=True)
 else:
     command = ["python3", next_script, folder_path]
     Popen(command, stdin=None, stdout=None, stderr=None, shell=True)

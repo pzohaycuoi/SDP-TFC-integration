@@ -457,7 +457,7 @@ def tf_plan_to_file(token: str, server: str, run_id: str, file_path: str):
 def tf_run_apply(token: str, server: str, run_id: str, comment: str):
     payload = {"comment": comment}
     header = {"Content-type": "application/vnd.api+json", "Authorization": f"Bearer {token}"}
-    url = f"{server}/api/v2/runs/{run_id}/action/apply"
+    url = f"{server}/api/v2/runs/{run_id}/actions/apply"
     try:
         req = requests.post(url, headers=header, data=payload, verify=True)
     except requests.exceptions.RequestException as err:

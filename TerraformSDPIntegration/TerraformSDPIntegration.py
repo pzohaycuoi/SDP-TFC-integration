@@ -196,10 +196,11 @@ with open(f"{temp_file}", "w") as file:
 tf_run_json = json.loads(tf_run)
 change_id = opt_data["INPUT_DATA"]["entity_data"]["template"]["id"]
 run_id = tf_run_json["data"]["id"]
+folder = folder.replace("\\", "/")
 data = '''{
     "workspace_name": "%s",
     "change_id": %s,
-    "folder_path": "%s"
+    "folder_path": "%s",
     "run_id": "%s"
 }''' % (workspace_name, change_id, folder, run_id)
 data_file = os.path.join(folder, "data.json")
@@ -218,11 +219,13 @@ next_script = os.path.join(cur_dir, "TerraformFetchPlanStatus.py")
 
 # Check platform and create independent process
 if sys.platform == "win32":
-    CREATE_NEW_PROCESS_GROUP = 0x00000200
-    DETACHED_PROCESS = 0x00000008
+    # CREATE_NEW_PROCESS_GROUP = 0x00000200
+    # DETACHED_PROCESS = 0x00000008
+    # command = ["python", next_script, folder]
+    # Popen(command, stdin=None, stdout=None, stderr=None, shell=True,
+    #       creationflags=DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP)
     command = ["python", next_script, folder]
-    Popen(command, stdin=None, stdout=None, stderr=None, shell=True,
-          creationflags=DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP)
+    Popen(command, stdin=None, stdout=None, stderr=None, shell=True)
 else:
     command = ["python3", next_script, folder]
     Popen(command, stdin=None, stdout=None, stderr=None, shell=True)

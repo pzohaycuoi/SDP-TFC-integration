@@ -31,12 +31,12 @@ task_run_id = SDPAPI.task_add(SDP_TOKEN, SDP_SERVER, change_id, task_name, f"{wo
 time_start = round(time.time() * 1000)
 
 # List of pending status
-status_pending_list = ["fetching", "queuing", "planning", "cost_estimating", "policy_checking",
+status_pending_list = ["fetching", "queuing", "planning", "cost_estimating", "policy_checking", "pending"
                        "post_plan_running", "applying", "apply_queued", "plan_queued", "queuing", "pre_plan_running"]
 status_completed_list = ["fetching_completed", "pre_plan_completed", "confirmed", "post_plan_completed",
-                         "planned_and_finished"]
+                         "cost_estimated", "planned_and_finished"]
 status_final_completed_list = ["applied"]
-status_plan_completed_list = ["pending", "cost_estimated", "planned"]
+status_plan_completed_list = ["planned"]
 status_error_list = ["discarded", "errored", "canceled", "force_canceled"]
 
 # Loop until Terraform run completed
@@ -68,7 +68,7 @@ while True:
             elif run_status in status_plan_completed_list:
                 time.sleep(10)
                 continue
-            elif run_status in status_plan_completed_list:
+            elif run_status in status_final_completed_list:
                 time_end = round(time.time() * 1000)
                 SDPAPI.worklog_add(SDP_TOKEN, SDP_SERVER, task_run_id, f"{workspace_name}-{run_id} run completed",
                                    time_start, time_end)
